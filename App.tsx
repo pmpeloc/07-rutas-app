@@ -1,6 +1,9 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { enableLatestRenderer } from 'react-native-maps';
+
+enableLatestRenderer();
 
 import { Navigator } from './src/navigator/Navigator';
 import { PermissionsProvider } from './src/context/PermissionsContext';
