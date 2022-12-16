@@ -1,18 +1,38 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable curly */
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useState, useRef } from 'react';
 import Geolocation from '@react-native-community/geolocation';
 
 import { Location } from '../interfaces/app.interface';
 
 export const useLocation = () => {
   const [hasLocation, setHasLocation] = useState(false);
+  const [routeLines, setRouteLines] = useState<Location[]>([]);
   const [initialPosition, setInitialPosition] = useState<Location>({
     latitude: 0,
     longitude: 0,
   });
+  const [userLocation, setUserLocation] = useState<Location>({
+    latitude: 0,
+    longitude: 0,
+  });
+
+  const watchId = useRef<number>();
+  const isMounted = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     getCurrentLocation().then(location => {
+      if (!isMounted.current) return;
       setInitialPosition(location);
+      setUserLocation(location);
+      setRouteLines(routes => [...routes, location]);
       setHasLocation(true);
     });
   }, []);
@@ -33,9 +53,35 @@ export const useLocation = () => {
     });
   };
 
+  const followUserLocation = () => {
+    watchId.current = Geolocation.watchPosition(
+      ({ coords }) => {
+        if (!isMounted.current) return;
+        const location: Location = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        };
+        setUserLocation(location);
+        setRouteLines(routes => [...routes, location]);
+      },
+      err => console.log(err),
+      { enableHighAccuracy: true, distanceFilter: 10 },
+    );
+  };
+
+  const stopFollowUserLocation = () => {
+    if (watchId.current) {
+      Geolocation.clearWatch(watchId.current);
+    }
+  };
+
   return {
     hasLocation,
     initialPosition,
+    userLocation,
+    routeLines,
     getCurrentLocation,
+    followUserLocation,
+    stopFollowUserLocation,
   };
 };
