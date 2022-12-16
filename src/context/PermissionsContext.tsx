@@ -28,6 +28,7 @@ export const PermissionsProvider = ({ children }: any) => {
   const [permissions, setPermissions] = useState(permissionInitState);
 
   useEffect(() => {
+    checkLocationPermission();
     AppState.addEventListener('change', state => {
       // eslint-disable-next-line curly
       if (state !== 'active') return;
